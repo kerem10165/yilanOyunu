@@ -1,7 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
-
+#include <random>
 using namespace std;
 
 enum class Yon { SAG, SOL, YUKARÝ, ASAGÝ };
@@ -12,14 +12,22 @@ public:
 	float x, y;
 };
 
-info a[100];
 
-void konum(int yon);
 
-float yilan_x = 60.0f;
-float yilan_y = 60.0f;
+class Yem
+{
+public:
+	float x, y;
+};
 
-int number = 4;
+info a[2000];
+Yem yem;
+
+
+void konum(int yon, uniform_int_distribution<int>& dagilim, mt19937& motor);
+
+
+int number = 40;
 
 float x = 15.0f;
 float y = 15.0f;
@@ -32,6 +40,12 @@ int main()
 {
 
 	int yon=0;
+	random_device rd;
+	uniform_int_distribution<int> dagilim(0, 39);
+	mt19937 motor(rd());
+	yem.x = dagilim(motor)*15;
+	yem.y = dagilim(motor)*15;
+
 
 	sf::RenderWindow pencere(sf::VideoMode(w+1, h+1), "YilanOyunu");
 	pencere.setFramerateLimit(60);
@@ -48,6 +62,10 @@ int main()
 	yilan.setSize(sf::Vector2f(x,y));
 	yilan.setFillColor(sf::Color::Red);
 	yilan.setPosition(30, 30);
+
+	sf::RectangleShape yemm;
+	yemm.setSize(sf::Vector2f(x, y));
+	yemm.setFillColor(sf::Color::Green);
 
 	sf::Clock clock;
 	float timer = 0, delay = 0.1;
@@ -85,13 +103,14 @@ int main()
 			yon = 3;
 		}
 
-		if (clock.getElapsedTime().asMilliseconds() > 20)
+		if (clock.getElapsedTime().asMilliseconds() > 120)
 
 		{
-			konum(yon);
+			konum(yon,dagilim,motor);
 			clock.restart();
 		}
 
+		//draw
 
 		pencere.clear();
 
@@ -100,6 +119,10 @@ int main()
 			yilan.setPosition(a[i].x, a[i].y);
 			pencere.draw(yilan);
 		}
+
+
+		yemm.setPosition(yem.x, yem.y);
+		pencere.draw(yemm);
 
 		
 		for (int i = 0,j=0; i < 41; i++ , j+=15)
@@ -124,13 +147,30 @@ int main()
 	return 0;
 }
 
-void konum(int yon)
+void konum(int yon,uniform_int_distribution<int>&dagilim,mt19937 &motor)
 {
+	static int sayac = 0;
+
+	if (sayac >= 40)
+	{
+		for (int i = 1; i < number; i++)
+		{
+			if (a[0].x == a[i].x && a[0].y == a[i].y)
+			{
+				sayac = 0;
+				a[0].x = 0;
+				a[0].y = 0;
+				number = 40;
+			}
+		}
+	}
+
 	for (int i = number; i > 0; --i)
 	{
 		a[i].x = a[i - 1].x;
 		a[i].y = a[i - 1].y;
 	}
+
 
 	if (yon==0)
 	{
@@ -149,5 +189,35 @@ void konum(int yon)
 		a[0].y += 15;
 	}
 
+	
 
+
+	cout << sayac << "x: " << a[0].x << " y: " << a[0].y << endl;
+	
+	
+	if (a[0].x < 0)
+	{
+		a[0].x = 585;
+	}
+	else if (a[0].x > 585)
+	{
+		a[0].x = 0;
+	}
+	else if (a[0].y > 585)
+	{
+		a[0].y = 0;
+	}
+	else if (a[0].y < 0)
+	{
+		a[0].y = 585;
+	}
+
+	if (a[0].x == yem.x && a[0].y == yem.y)
+	{
+		number++;
+		yem.x = dagilim(motor)*15;
+		yem.y = dagilim(motor)*15;
+	}
+
+	sayac++;
 }
